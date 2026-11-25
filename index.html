@@ -19,6 +19,7 @@
       --accent-glow: rgba(139, 110, 255, 0.45);
       --success: #4ade80;
       --danger: #fb7185;
+      --warn: #fbbf24;
       --nav-bg: rgba(18, 15, 34, 0.94);
     }
 
@@ -172,6 +173,10 @@
       line-height: 1.25;
     }
 
+    .gauge-pace.warn-text {
+      color: var(--warn);
+    }
+
     /* Cards & Sections */
     .card {
       background: var(--card-bg);
@@ -220,6 +225,11 @@
       transform: scale(0.99);
     }
 
+    .quick-action-btn.locked {
+      border-color: rgba(251, 191, 36, 0.45);
+      background: rgba(66, 48, 22, 0.45);
+    }
+
     .plus-circle {
       width: 24px;
       height: 24px;
@@ -265,8 +275,8 @@
     }
 
     .avatar {
-      width: 26px;
-      height: 26px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       background: rgba(139, 110, 255, 0.25);
       border: 1px solid rgba(154, 132, 255, 0.35);
@@ -276,6 +286,15 @@
       font-weight: 700;
       color: #e4ddff;
       flex-shrink: 0;
+      overflow: hidden;
+      object-fit: cover;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
     }
 
     .member-pct {
@@ -305,6 +324,58 @@
     .val-tarik {
       color: var(--danger);
       font-weight: 600;
+    }
+
+    /* Profile Card in Settings */
+    .profile-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(17, 14, 34, 0.65);
+      border: 1px solid var(--card-border);
+    }
+
+    .profile-avatar-wrap {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      border: 2px solid rgba(154, 132, 255, 0.5);
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      font-weight: 800;
+      color: #efeaff;
+      overflow: hidden;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .profile-avatar-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .profile-name-display {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .profile-sub-display {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.35;
     }
 
     /* Info Strip Card */
@@ -676,7 +747,6 @@
                 <stop offset="100%" stop-color="#c084fc" />
               </linearGradient>
             </defs>
-            <!-- Semicircle radius 92 from (28, 112) to (212, 112), arc length = pi * 92 = 289.03 -->
             <path class="gauge-bg" d="M 28 112 A 92 92 0 0 1 212 112" />
             <path
               id="gaugeArc"
@@ -691,15 +761,15 @@
             <div class="gauge-label" id="judulTarget">Target Tabungan Bersama</div>
             <div class="gauge-total" id="totalTerkumpul">Rp0</div>
             <div class="gauge-sub" id="sisaTargetText">Rp0 tersisa dari Rp5.000.000</div>
-            <div class="gauge-pace" id="paceText">Isi setoran atau target harian untuk estimasi</div>
+            <div class="gauge-pace" id="paceText">Wajib isi target harian dulu</div>
           </div>
         </div>
       </div>
 
       <!-- Quick Add / Withdraw Trigger -->
-      <button type="button" class="quick-action-btn" onclick="openTxModal('setor')">
-        <span class="plus-circle">+</span>
-        <span>Catat Setor atau Tarik Tabungan</span>
+      <button type="button" class="quick-action-btn" id="quickActionBtn" onclick="handleQuickAction()">
+        <span class="plus-circle" id="quickActionIcon">+</span>
+        <span id="quickActionText">Catat Setor atau Tarik Tabungan</span>
       </button>
 
       <!-- Partner Contribution Card -->
@@ -707,8 +777,8 @@
         <div class="split-grid">
           <div class="member-col">
             <div class="member-header">
-              <span class="avatar">R</span>
-              <span>Rafka</span>
+              <span class="avatar" id="avatarRafka">R</span>
+              <span id="labelNamaRafka">Rafka</span>
               <span class="member-pct" id="pctRafka">0%</span>
             </div>
             <div class="stat-row">
@@ -724,8 +794,8 @@
           <div class="member-col">
             <div class="member-header right">
               <span class="member-pct" id="pctPartner">0%</span>
-              <span>Partner</span>
-              <span class="avatar">P</span>
+              <span id="labelNamaPartner">Partner</span>
+              <span class="avatar" id="avatarPartner">P</span>
             </div>
             <div class="stat-row">
               <span class="stat-label">Setor</span>
@@ -745,7 +815,7 @@
           <div class="info-icon-box">💜</div>
           <div>
             <div class="info-title">PIGGY BANK TOGETHER</div>
-            <div class="info-desc">Sinkron real-time bareng partner. Bagikan link agar bisa update bareng.</div>
+            <div class="info-desc" id="dailyStatusDesc">Wajib atur target pemasukan harian agar bisa nabung & hitung estimasi.</div>
           </div>
         </div>
         <button type="button" class="icon-btn" onclick="copyShareLink()" title="Salin Link">↗</button>
@@ -756,8 +826,8 @@
         <div class="info-left">
           <div class="info-icon-box">🎯</div>
           <div>
-            <div class="info-title">Target & Judul Tabungan</div>
-            <div class="info-desc" id="targetSummaryDesc">Atur nama tujuan dan nominal target bersama.</div>
+            <div class="info-title">Target & Pemasukan Harian</div>
+            <div class="info-desc" id="targetSummaryDesc">Atur judul, nominal target, dan target harian wajib.</div>
           </div>
         </div>
         <span class="muted">Ubah ›</span>
@@ -792,6 +862,14 @@
           <span class="stat-label">Total Pengeluaran (Tarik)</span>
           <span class="val-tarik" id="chartTotalTarik">-Rp0</span>
         </div>
+        <div class="stat-row" style="padding: 8px 0;">
+          <span class="stat-label">Target Harian Wajib</span>
+          <span style="font-weight: 700;" id="chartTargetHarian">Belum diatur</span>
+        </div>
+        <div class="stat-row" style="padding: 8px 0;">
+          <span class="stat-label">Hari Terpenuhi (Sudah Bayar)</span>
+          <span class="val-setor" id="chartHariTerpenuhi">0 hari</span>
+        </div>
         <div class="stat-row" style="padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 6px; padding-top: 12px;">
           <span style="font-weight: 700;">Saldo Bersih Saat Ini</span>
           <span style="font-weight: 800; font-size: 15px;" id="chartSaldoBersih">Rp0</span>
@@ -801,18 +879,50 @@
 
     <!-- SETTINGS TAB -->
     <section id="tab-settings" class="hidden">
+      <!-- Profil Umum -->
+      <div class="card">
+        <div class="section-title">
+          <span>Profil Umum (Perangkat Ini)</span>
+          <span class="muted">Lokal</span>
+        </div>
+
+        <div class="profile-box">
+          <div class="profile-avatar-wrap" id="profileAvatarPreview" onclick="document.getElementById('profilePhotoInput').click()" title="Ganti Foto Profil">
+            R
+          </div>
+          <input type="file" id="profilePhotoInput" accept="image/*" class="hidden" onchange="handleProfilePhoto(event)" />
+          <div class="profile-meta">
+            <div class="profile-name-display" id="profileDisplayName">Rafka</div>
+            <div class="profile-sub-display" id="profileDisplayRole">Terdaftar sebagai: Rafka • Ketuk foto bulat untuk ganti</div>
+          </div>
+        </div>
+
+        <label for="inputNamaProfil">Nama Tampilan Kamu</label>
+        <input type="text" id="inputNamaProfil" placeholder="Contoh: Rafka / Nama Temanmu" />
+
+        <label for="inputPeranDefault">Peran Akun di Tabungan (Agar Tidak Salah Pencet)</label>
+        <select id="inputPeranDefault">
+          <option value="Rafka">Rafka (Akun Utama)</option>
+          <option value="Partner">Partner (Akun Teman/Pasangan)</option>
+        </select>
+
+        <button type="button" class="btn-primary" onclick="simpanProfil()">Simpan Profil</button>
+        <button type="button" class="btn-secondary" style="margin-top: 8px;" onclick="hapusFotoProfil()">Hapus Foto Profil</button>
+      </div>
+
+      <!-- Pengaturan Target Tabungan -->
       <div class="card">
         <div class="section-title">
           <span>Pengaturan Target Tabungan</span>
         </div>
         <label for="inputJudulBaru">Judul Tabungan</label>
-        <input type="text" id="inputJudulBaru" placeholder="Contoh: Liburan / Dana Darurat" />
+        <input type="text" id="inputJudulBaru" placeholder="Contoh: Tenda / Liburan" />
 
         <label for="inputTargetBaru">Nominal Target (Rp)</label>
-        <input type="number" id="inputTargetBaru" placeholder="Contoh: 5000000" min="1000" step="1000" />
+        <input type="number" id="inputTargetBaru" placeholder="Contoh: 2000000" min="1000" step="1000" />
 
-        <label for="inputHarianBaru">Target / Pemasukan Harian (Rp / hari, opsional)</label>
-        <input type="number" id="inputHarianBaru" placeholder="Kosongkan untuk pakai rata-rata setoran" min="0" step="1000" />
+        <label for="inputHarianBaru">Target Pemasukan Harian Wajib (Rp / hari)</label>
+        <input type="number" id="inputHarianBaru" placeholder="Wajib diisi, contoh: 25000" min="100" step="500" />
 
         <button type="button" class="btn-primary" onclick="updateTarget()">Simpan Perubahan Target</button>
       </div>
@@ -822,7 +932,7 @@
           <span>Bagikan Akses</span>
         </div>
         <p class="info-desc" style="margin-top: 0; margin-bottom: 12px;">
-          Kirim tautan di bawah ini ke partner supaya kalian berdua bisa menambah atau menarik tabungan secara langsung.
+          Kirim tautan aplikasi ke partner supaya bisa buka di HP masing-masing dan atur profilnya sendiri.
         </p>
         <button type="button" class="btn-secondary" onclick="copyShareLink()">Salin Link Aplikasi</button>
       </div>
@@ -840,7 +950,7 @@
       <span>History</span>
     </button>
     <div class="fab-wrap">
-      <button type="button" class="fab-btn" onclick="openTxModal('setor')" title="Tambah Transaksi">+</button>
+      <button type="button" class="fab-btn" onclick="handleQuickAction()" title="Tambah Transaksi">+</button>
     </div>
     <button type="button" class="nav-btn" id="nav-charts" onclick="switchTab('charts')">
       <span class="nav-ico">◔</span>
@@ -869,17 +979,17 @@
         </button>
       </div>
 
-      <label for="penyetor">Siapa yang melakukan?</label>
+      <label for="penyetor">Siapa yang melakukan? (Otomatis sesuai profil HP ini)</label>
       <select id="penyetor">
         <option value="Rafka">Rafka</option>
         <option value="Partner">Partner</option>
       </select>
 
       <label for="nominal">Nominal (Rp)</label>
-      <input type="number" id="nominal" placeholder="Contoh: 50000" min="1" />
+      <input type="number" id="nominal" placeholder="Contoh: 25000" min="1" />
 
       <label for="catatan">Catatan (opsional)</label>
-      <input type="text" id="catatan" placeholder="Contoh: Sisihan mingguan / Kebutuhan mendesak" />
+      <input type="text" id="catatan" placeholder="Contoh: Nabung harian / Kebutuhan" />
 
       <button type="button" class="btn-primary" id="submitTxBtn" onclick="simpanTransaksi()">
         Simpan Setoran
@@ -887,11 +997,11 @@
     </div>
   </div>
 
-  <!-- Modal Ubah Target -->
+  <!-- Modal Ubah Target & Harian Wajib -->
   <div class="modal-backdrop" id="targetModal" onclick="handleBackdropClick(event, 'targetModal')">
     <div class="modal-sheet">
       <div class="modal-header">
-        <h3>Atur Target Tabungan</h3>
+        <h3>Atur Target & Harian Wajib</h3>
         <button type="button" class="close-x" onclick="closeModal('targetModal')">✕</button>
       </div>
 
@@ -899,12 +1009,12 @@
       <input type="text" id="modalJudulInput" placeholder="Target Tabungan Bersama" />
 
       <label for="modalTargetInput">Nominal Target (Rp)</label>
-      <input type="number" id="modalTargetInput" placeholder="5000000" min="1000" step="1000" />
+      <input type="number" id="modalTargetInput" placeholder="2000000" min="1000" step="1000" />
 
-      <label for="modalHarianInput">Target / Pemasukan Harian (Rp / hari, opsional)</label>
-      <input type="number" id="modalHarianInput" placeholder="Kosongkan untuk pakai rata-rata setoran" min="0" step="1000" />
+      <label for="modalHarianInput">Target Pemasukan Harian Wajib (Rp / hari)</label>
+      <input type="number" id="modalHarianInput" placeholder="Wajib diisi, contoh: 25000" min="100" step="500" />
 
-      <button type="button" class="btn-primary" onclick="updateTargetFromModal()">Simpan Target</button>
+      <button type="button" class="btn-primary" onclick="updateTargetFromModal()">Simpan Pengaturan</button>
     </div>
   </div>
 
@@ -930,12 +1040,129 @@
     const judulRef = db.ref('tabungan_bersama/judul');
     const harianRef = db.ref('tabungan_bersama/target_harian');
 
+    const PROFILE_KEY = "piggy_bank_user_profile_v1";
     const ARC_LENGTH = 289.03;
+
     let currentJudul = "Target Tabungan Bersama";
     let currentTarget = 5000000;
     let currentTargetHarian = 0;
     let currentSaldo = 0;
     let selectedTxType = "setor";
+
+    let userProfile = loadProfile();
+
+    function loadProfile() {
+      try {
+        const raw = localStorage.getItem(PROFILE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return {
+            nama: parsed.nama || (parsed.role === "Partner" ? "Partner" : "Rafka"),
+            role: parsed.role === "Partner" ? "Partner" : "Rafka",
+            photo: parsed.photo || ""
+          };
+        }
+      } catch (e) {}
+      return { nama: "Rafka", role: "Rafka", photo: "" };
+    }
+
+    function saveProfileToStorage() {
+      try {
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(userProfile));
+      } catch (e) {
+        alert("Foto terlalu besar untuk disimpan di browser. Coba pilih foto yang lebih kecil.");
+      }
+    }
+
+    function getInitial(name) {
+      const clean = String(name || "U").trim();
+      return clean ? clean.charAt(0).toUpperCase() : "U";
+    }
+
+    function renderProfileUI() {
+      const displayName = userProfile.nama || userProfile.role;
+      const initial = getInitial(displayName);
+
+      document.getElementById("profileDisplayName").textContent = displayName;
+      document.getElementById("profileDisplayRole").textContent =
+        `Peran: ${userProfile.role} • Ketuk lingkaran untuk ganti foto`;
+      document.getElementById("inputNamaProfil").value = displayName;
+      document.getElementById("inputPeranDefault").value = userProfile.role;
+
+      const previewEl = document.getElementById("profileAvatarPreview");
+      if (userProfile.photo) {
+        previewEl.innerHTML = `<img src="${userProfile.photo}" alt="Foto Profil" />`;
+      } else {
+        previewEl.textContent = initial;
+      }
+
+      // Perbarui tampilan avatar di kartu Rafka / Partner sesuai peran aktif
+      const avatarRafka = document.getElementById("avatarRafka");
+      const labelRafka = document.getElementById("labelNamaRafka");
+      const avatarPartner = document.getElementById("avatarPartner");
+      const labelPartner = document.getElementById("labelNamaPartner");
+
+      if (userProfile.role === "Rafka") {
+        labelRafka.textContent = displayName;
+        avatarRafka.innerHTML = userProfile.photo ? `<img src="${userProfile.photo}" alt="Rafka" />` : getInitial(displayName);
+        labelPartner.textContent = "Partner";
+        avatarPartner.textContent = "P";
+      } else {
+        labelRafka.textContent = "Rafka";
+        avatarRafka.textContent = "R";
+        labelPartner.textContent = displayName;
+        avatarPartner.innerHTML = userProfile.photo ? `<img src="${userProfile.photo}" alt="Partner" />` : getInitial(displayName);
+      }
+
+      document.getElementById("penyetor").value = userProfile.role;
+    }
+
+    function handleProfilePhoto(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        alert("Pilih file gambar (JPG/PNG/WEBP).");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          const size = 180;
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext("2d");
+          const minSide = Math.min(img.width, img.height);
+          const sx = (img.width - minSide) / 2;
+          const sy = (img.height - minSide) / 2;
+          ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+          userProfile.photo = canvas.toDataURL("image/jpeg", 0.78);
+          saveProfileToStorage();
+          renderProfileUI();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function hapusFotoProfil() {
+      userProfile.photo = "";
+      saveProfileToStorage();
+      renderProfileUI();
+    }
+
+    function simpanProfil() {
+      const namaInput = document.getElementById("inputNamaProfil").value.trim();
+      const roleInput = document.getElementById("inputPeranDefault").value === "Partner" ? "Partner" : "Rafka";
+
+      userProfile.role = roleInput;
+      userProfile.nama = namaInput || roleInput;
+      saveProfileToStorage();
+      renderProfileUI();
+      alert("Profil berhasil disimpan untuk perangkat ini!");
+    }
 
     function formatRp(num) {
       const n = Number(num) || 0;
@@ -958,6 +1185,14 @@
       return `${tanggal} • ${jam} WIB`;
     }
 
+    function getDayKey(ts) {
+      const d = new Date(Number(ts) || Date.now());
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
     function setMonthHeader() {
       const now = new Date();
       const label = now.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
@@ -965,7 +1200,54 @@
         label.charAt(0).toUpperCase() + label.slice(1);
     }
 
+    // Hitung hari yang sudah memenuhi target harian dengan sistem tambal kekurangan ke hari berikutnya
+    function hitungHariTerpenuhi(dailySetorMap, targetHarian) {
+      if (!targetHarian || targetHarian <= 0) return 0;
+      const sortedDays = Object.keys(dailySetorMap).sort();
+      let carryDeficit = 0;
+      let hariTerpenuhi = 0;
+
+      sortedDays.forEach((dayKey) => {
+        const masukHariIni = Number(dailySetorMap[dayKey]) || 0;
+        const kebutuhanHariIni = targetHarian + carryDeficit;
+        if (masukHariIni >= kebutuhanHariIni) {
+          hariTerpenuhi += 1;
+          carryDeficit = 0;
+        } else {
+          carryDeficit = kebutuhanHariIni - masukHariIni;
+        }
+      });
+
+      return hariTerpenuhi;
+    }
+
+    function updateLockStateUI() {
+      const hasDaily = currentTargetHarian > 0;
+      const btn = document.getElementById("quickActionBtn");
+      const icon = document.getElementById("quickActionIcon");
+      const text = document.getElementById("quickActionText");
+      const paceEl = document.getElementById("paceText");
+      const statusDesc = document.getElementById("dailyStatusDesc");
+
+      if (!hasDaily) {
+        btn.classList.add("locked");
+        icon.textContent = "!";
+        text.textContent = "Wajib Isi Target Pemasukan Harian Dulu";
+        paceEl.classList.add("warn-text");
+        paceEl.textContent = "Isi target harian untuk buka fitur nabung & estimasi";
+        statusDesc.textContent = "Fitur nabung dikunci sampai target pemasukan harian diisi.";
+      } else {
+        btn.classList.remove("locked");
+        icon.textContent = "+";
+        text.textContent = "Catat Setor atau Tarik Tabungan";
+        paceEl.classList.remove("warn-text");
+        statusDesc.textContent = `Target harian: ${formatRp(currentTargetHarian)}/hari • Kekurangan otomatis ditambal hari berikutnya.`;
+      }
+    }
+
     function renderGaugeAndStats(stats) {
+      updateLockStateUI();
+
       const {
         totalSetor,
         totalTarik,
@@ -973,7 +1255,7 @@
         rafkaTarik,
         partnerSetor,
         partnerTarik,
-        oldestSetorTs
+        dailySetorMap
       } = stats;
 
       const saldo = totalSetor - totalTarik;
@@ -995,27 +1277,25 @@
       document.getElementById("sisaTargetText").textContent =
         `${formatRp(sisa)} tersisa dari ${formatRp(safeTarget)}`;
 
-      let avgSetorPerHari = 0;
-      if (totalSetor > 0) {
-        const startTs = oldestSetorTs || Date.now();
-        const spanDays = Math.max(1, Math.ceil((Date.now() - startTs) / (1000 * 60 * 60 * 24)));
-        avgSetorPerHari = Math.max(1, Math.round(totalSetor / spanDays));
-      }
+      const paceEl = document.getElementById("paceText");
+      const hariTerpenuhi = hitungHariTerpenuhi(dailySetorMap || {}, currentTargetHarian);
 
-      const acuanHarian = currentTargetHarian > 0 ? currentTargetHarian : avgSetorPerHari;
-
-      if (sisa === 0) {
-        document.getElementById("paceText").textContent = "Target sudah tercapai 🎉";
-      } else if (acuanHarian > 0) {
-        const estimasiHari = Math.max(1, Math.ceil(sisa / acuanHarian));
-        document.getElementById("paceText").textContent =
-          `Estimasi selesai ~${estimasiHari} hari lagi`;
+      if (currentTargetHarian <= 0) {
+        paceEl.classList.add("warn-text");
+        paceEl.textContent = "Wajib isi target harian dulu";
+      } else if (sisa === 0) {
+        paceEl.classList.remove("warn-text");
+        paceEl.textContent = "Target sudah tercapai 🎉";
       } else {
-        document.getElementById("paceText").textContent = "Isi setoran atau target harian untuk estimasi";
+        paceEl.classList.remove("warn-text");
+        const estimasiHari = Math.max(1, Math.ceil(sisa / currentTargetHarian));
+        paceEl.textContent = `Estimasi selesai ~${estimasiHari} hari lagi (${hariTerpenuhi} hari terpenuhi)`;
       }
 
       document.getElementById("targetSummaryDesc").textContent =
-        `${currentJudul} • Target ${formatRp(safeTarget)}`;
+        currentTargetHarian > 0
+          ? `${currentJudul} • Target ${formatRp(safeTarget)} • ${formatRp(currentTargetHarian)}/hari`
+          : `${currentJudul} • Target ${formatRp(safeTarget)} • Target harian belum diisi`;
 
       // Partner stats
       const rafkaNet = Math.max(0, rafkaSetor - rafkaTarik);
@@ -1035,6 +1315,9 @@
       // Summary tab
       document.getElementById("chartTotalSetor").textContent = formatRp(totalSetor);
       document.getElementById("chartTotalTarik").textContent = `-${formatRp(totalTarik)}`;
+      document.getElementById("chartTargetHarian").textContent =
+        currentTargetHarian > 0 ? `${formatRp(currentTargetHarian)} / hari` : "Belum diatur";
+      document.getElementById("chartHariTerpenuhi").textContent = `${hariTerpenuhi} hari`;
       document.getElementById("chartSaldoBersih").textContent = saldoFormatted;
     }
 
@@ -1055,7 +1338,22 @@
       }
     }
 
+    function handleQuickAction(type = "setor") {
+      if (!currentTargetHarian || currentTargetHarian <= 0) {
+        alert("Target pemasukan harian wajib diisi terlebih dahulu sebelum mencatat tabungan!");
+        openTargetModal();
+        return;
+      }
+      openTxModal(type);
+    }
+
     function openTxModal(type = "setor") {
+      if (!currentTargetHarian || currentTargetHarian <= 0) {
+        alert("Target pemasukan harian wajib diisi terlebih dahulu sebelum mencatat tabungan!");
+        openTargetModal();
+        return;
+      }
+      document.getElementById("penyetor").value = userProfile.role;
       setTxType(type);
       document.getElementById("txModal").classList.add("show");
       setTimeout(() => document.getElementById("nominal").focus(), 120);
@@ -1086,6 +1384,13 @@
     }
 
     function simpanTransaksi() {
+      if (!currentTargetHarian || currentTargetHarian <= 0) {
+        alert("Target pemasukan harian wajib diisi terlebih dahulu!");
+        closeModal("txModal");
+        openTargetModal();
+        return;
+      }
+
       const nama = document.getElementById("penyetor").value;
       const jumlahRaw = Number(document.getElementById("nominal").value);
       const catatan = document.getElementById("catatan").value.trim();
@@ -1132,22 +1437,19 @@
     function applyTargetUpdate(judulVal, targetVal, harianVal) {
       const cleanJudul = String(judulVal || "").trim();
       const cleanTarget = Number(targetVal);
-      const cleanHarian = harianVal === "" || harianVal === undefined ? 0 : Number(harianVal);
-      const tasks = [];
+      const cleanHarian = Number(harianVal);
 
-      if (cleanJudul) tasks.push(judulRef.set(cleanJudul));
-      if (cleanTarget && cleanTarget > 0) tasks.push(targetRef.set(Math.round(cleanTarget)));
-      if (!Number.isNaN(cleanHarian) && cleanHarian >= 0) {
-        tasks.push(harianRef.set(Math.round(cleanHarian)));
-      }
-
-      if (tasks.length === 0) {
-        alert("Isi judul atau nominal target terlebih dahulu.");
+      if (!cleanHarian || cleanHarian <= 0) {
+        alert("Target pemasukan harian wajib diisi (lebih dari Rp0) agar estimasi dan pencatatan tabungan bisa berjalan.");
         return Promise.reject();
       }
 
+      const tasks = [harianRef.set(Math.round(cleanHarian))];
+      if (cleanJudul) tasks.push(judulRef.set(cleanJudul));
+      if (cleanTarget && cleanTarget > 0) tasks.push(targetRef.set(Math.round(cleanTarget)));
+
       return Promise.all(tasks)
-        .then(() => alert("Target tabungan berhasil diperbarui!"))
+        .then(() => alert("Target & pemasukan harian berhasil disimpan!"))
         .catch((err) => alert("Gagal menyimpan target: " + err.message));
     }
 
@@ -1187,7 +1489,7 @@
       rafkaTarik: 0,
       partnerSetor: 0,
       partnerTarik: 0,
-      oldestSetorTs: null
+      dailySetorMap: {}
     };
 
     judulRef.on("value", (snapshot) => {
@@ -1219,7 +1521,7 @@
       let rafkaTarik = 0;
       let partnerSetor = 0;
       let partnerTarik = 0;
-      let oldestSetorTs = null;
+      const dailySetorMap = {};
 
       if (!data) {
         listEl.innerHTML = '<div class="empty-state">Belum ada transaksi tercatat.</div>';
@@ -1231,7 +1533,7 @@
           rafkaTarik: 0,
           partnerSetor: 0,
           partnerTarik: 0,
-          oldestSetorTs: null
+          dailySetorMap: {}
         };
         renderGaugeAndStats(latestStats);
         return;
@@ -1258,9 +1560,8 @@
           }
         } else {
           totalSetor += nominalAbs;
-          if (ts && (!oldestSetorTs || ts < oldestSetorTs)) {
-            oldestSetorTs = ts;
-          }
+          const dKey = getDayKey(ts || Date.now());
+          dailySetorMap[dKey] = (dailySetorMap[dKey] || 0) + nominalAbs;
           if (penyetor.toLowerCase().includes("partner")) {
             partnerSetor += nominalAbs;
           } else {
@@ -1298,7 +1599,7 @@
         rafkaTarik,
         partnerSetor,
         partnerTarik,
-        oldestSetorTs
+        dailySetorMap
       };
 
       renderGaugeAndStats(latestStats);
@@ -1314,6 +1615,8 @@
     }
 
     setMonthHeader();
+    renderProfileUI();
+    updateLockStateUI();
   </script>
 </body>
 </html>
