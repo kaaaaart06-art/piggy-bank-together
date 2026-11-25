@@ -20,6 +20,8 @@
       --success: #4ade80;
       --danger: #fb7185;
       --warn: #fbbf24;
+      --fire-1: #ff9e2c;
+      --fire-2: #ff5e3a;
       --nav-bg: rgba(18, 15, 34, 0.94);
     }
 
@@ -185,6 +187,100 @@
       border-radius: 18px;
       padding: 16px;
       margin-bottom: 14px;
+    }
+
+    /* Streak Card */
+    .streak-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: linear-gradient(135deg, rgba(46, 33, 74, 0.82), rgba(28, 22, 54, 0.78));
+      border: 1px solid rgba(255, 158, 44, 0.22);
+      border-radius: 18px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .streak-card.lit {
+      border-color: rgba(255, 158, 44, 0.55);
+      box-shadow: 0 8px 24px rgba(255, 118, 36, 0.16);
+    }
+
+    .flame-box {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      transition: transform 0.25s ease, filter 0.25s ease, background 0.25s ease;
+    }
+
+    .streak-card.lit .flame-box {
+      background: radial-gradient(circle, rgba(255, 166, 43, 0.26), rgba(255, 82, 48, 0.08));
+      border-color: rgba(255, 158, 44, 0.45);
+      filter: drop-shadow(0 0 10px rgba(255, 130, 35, 0.45));
+      animation: flamePulse 2.2s ease-in-out infinite;
+    }
+
+    .streak-card.dim .flame-svg {
+      opacity: 0.36;
+      filter: grayscale(85%);
+    }
+
+    @keyframes flamePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+    }
+
+    .streak-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .streak-count {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+      line-height: 1.2;
+    }
+
+    .streak-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      line-height: 1.3;
+    }
+
+    .streak-pills {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .ready-chip {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .ready-chip.ok {
+      background: rgba(74, 222, 128, 0.16);
+      color: var(--success);
+    }
+
+    .ready-chip.wait {
+      background: rgba(251, 191, 36, 0.15);
+      color: var(--warn);
     }
 
     .section-title {
@@ -766,6 +862,37 @@
         </div>
       </div>
 
+      <!-- Streak Card (Nyala jika keduanya memenuhi tabungan harian, mati & balik 0 jika ada hari terlewat, reset jam 12 malam) -->
+      <div class="streak-card dim" id="streakCard">
+        <div class="flame-box">
+          <svg class="flame-svg" width="28" height="32" viewBox="0 0 28 32" fill="none">
+            <defs>
+              <linearGradient id="flameGrad" x1="14" y1="2" x2="14" y2="30" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#ffe066" />
+                <stop offset="48%" stop-color="#ff922b" />
+                <stop offset="100%" stop-color="#f03e3e" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M15.8 2.4C15.8 2.4 23.8 8.2 23.8 17.8C23.8 23.9 19.4 29.2 13.8 29.2C8.2 29.2 4.2 24.5 4.2 19.1C4.2 14.9 6.7 11.4 8.9 9.5C8.5 11.8 9.6 13.4 11.1 13.6C9.7 9.5 12.1 5.1 15.8 2.4Z"
+              fill="url(#flameGrad)"
+            />
+            <path
+              d="M14.1 16.2C14.1 16.2 18.2 19.1 18.2 23.4C18.2 26.2 16.2 28.5 13.7 28.5C11.2 28.5 9.5 26.3 9.5 23.9C9.5 22 10.6 20.4 11.7 19.5C11.6 20.7 12.2 21.5 13 21.6C12.4 19.5 13.1 17.5 14.1 16.2Z"
+              fill="#fff3bf"
+            />
+          </svg>
+        </div>
+        <div class="streak-info">
+          <div class="streak-count" id="streakCountText">0 hari berturut-turut</div>
+          <div class="streak-sub" id="streakStatusText">Percikan • Reset tiap jam 12 malam</div>
+        </div>
+        <div class="streak-pills">
+          <span class="ready-chip wait" id="chipRafka">Rafka: 0%</span>
+          <span class="ready-chip wait" id="chipPartner">Partner: 0%</span>
+        </div>
+      </div>
+
       <!-- Quick Add / Withdraw Trigger -->
       <button type="button" class="quick-action-btn" id="quickActionBtn" onclick="handleQuickAction()">
         <span class="plus-circle" id="quickActionIcon">+</span>
@@ -867,7 +994,11 @@
           <span style="font-weight: 700;" id="chartTargetHarian">Belum diatur</span>
         </div>
         <div class="stat-row" style="padding: 8px 0;">
-          <span class="stat-label">Hari Terpenuhi (Sudah Bayar)</span>
+          <span class="stat-label">Streak Bersama Aktif</span>
+          <span style="font-weight: 700; color: #ff9e2c;" id="chartStreakAktif">0 hari</span>
+        </div>
+        <div class="stat-row" style="padding: 8px 0;">
+          <span class="stat-label">Total Hari Terpenuhi Keduanya</span>
           <span class="val-setor" id="chartHariTerpenuhi">0 hari</span>
         </div>
         <div class="stat-row" style="padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 6px; padding-top: 12px;">
@@ -893,7 +1024,7 @@
           <input type="file" id="profilePhotoInput" accept="image/*" class="hidden" onchange="handleProfilePhoto(event)" />
           <div class="profile-meta">
             <div class="profile-name-display" id="profileDisplayName">Rafka</div>
-            <div class="profile-sub-display" id="profileDisplayRole">Terdaftar sebagai: Rafka • Ketuk foto bulat untuk ganti</div>
+            <div class="profile-sub-display" id="profileDisplayRole">Peran: Rafka • Ketuk lingkaran untuk ganti foto</div>
           </div>
         </div>
 
@@ -1048,6 +1179,7 @@
     let currentTargetHarian = 0;
     let currentSaldo = 0;
     let selectedTxType = "setor";
+    let activeDayKey = getDayKey(Date.now());
 
     let userProfile = loadProfile();
 
@@ -1096,7 +1228,6 @@
         previewEl.textContent = initial;
       }
 
-      // Perbarui tampilan avatar di kartu Rafka / Partner sesuai peran aktif
       const avatarRafka = document.getElementById("avatarRafka");
       const labelRafka = document.getElementById("labelNamaRafka");
       const avatarPartner = document.getElementById("avatarPartner");
@@ -1185,12 +1316,21 @@
       return `${tanggal} • ${jam} WIB`;
     }
 
-    function getDayKey(ts) {
-      const d = new Date(Number(ts) || Date.now());
+    function getDayKeyFromDate(d) {
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, "0");
       const day = String(d.getDate()).padStart(2, "0");
       return `${y}-${m}-${day}`;
+    }
+
+    function getDayKey(ts) {
+      return getDayKeyFromDate(new Date(Number(ts) || Date.now()));
+    }
+
+    function prevDayKey(dayKey) {
+      const [y, m, d] = dayKey.split("-").map(Number);
+      const dt = new Date(y, m - 1, d - 1);
+      return getDayKeyFromDate(dt);
     }
 
     function setMonthHeader() {
@@ -1200,25 +1340,85 @@
         label.charAt(0).toUpperCase() + label.slice(1);
     }
 
-    // Hitung hari yang sudah memenuhi target harian dengan sistem tambal kekurangan ke hari berikutnya
-    function hitungHariTerpenuhi(dailySetorMap, targetHarian) {
-      if (!targetHarian || targetHarian <= 0) return 0;
-      const sortedDays = Object.keys(dailySetorMap).sort();
-      let carryDeficit = 0;
-      let hariTerpenuhi = 0;
+    // Streak ikut kalender harian (reset tiap 00:00):
+    // Satu hari dianggap terpenuhi HANYA jika di tanggal tersebut kedua orang setor >= porsi harian masing-masing (targetHarian / 2).
+    // Jika ada 1 hari terlewat / tidak terpenuhi, streak mati & balik ke 0.
+    function hitungStreakStrictHarian(dailyByPersonMap, targetHarian) {
+      const todayKey = getDayKey(Date.now());
 
-      sortedDays.forEach((dayKey) => {
-        const masukHariIni = Number(dailySetorMap[dayKey]) || 0;
-        const kebutuhanHariIni = targetHarian + carryDeficit;
-        if (masukHariIni >= kebutuhanHariIni) {
-          hariTerpenuhi += 1;
-          carryDeficit = 0;
-        } else {
-          carryDeficit = kebutuhanHariIni - masukHariIni;
-        }
+      if (!targetHarian || targetHarian <= 0) {
+        return {
+          streakDays: 0,
+          isLitToday: false,
+          rafkaTodayDone: false,
+          partnerTodayDone: false,
+          rafkaTodayPct: 0,
+          partnerTodayPct: 0,
+          totalHariTerpenuhi: 0,
+          statusLabel: "Atur target harian untuk mulai streak"
+        };
+      }
+
+      const sharePerPerson = targetHarian / 2;
+      const rafkaMap = dailyByPersonMap.rafka || {};
+      const partnerMap = dailyByPersonMap.partner || {};
+
+      const allDays = new Set([...Object.keys(rafkaMap), ...Object.keys(partnerMap)]);
+      let totalHariTerpenuhi = 0;
+
+      const isDayQualified = (dKey) => {
+        const rSetor = Number(rafkaMap[dKey] || 0);
+        const pSetor = Number(partnerMap[dKey] || 0);
+        return rSetor >= sharePerPerson && pSetor >= sharePerPerson;
+      };
+
+      allDays.forEach((dKey) => {
+        if (isDayQualified(dKey)) totalHariTerpenuhi += 1;
       });
 
-      return hariTerpenuhi;
+      const rafkaTodaySetor = Number(rafkaMap[todayKey] || 0);
+      const partnerTodaySetor = Number(partnerMap[todayKey] || 0);
+
+      const rafkaTodayPct = sharePerPerson > 0 ? Math.min(100, Math.round((rafkaTodaySetor / sharePerPerson) * 100)) : 0;
+      const partnerTodayPct = sharePerPerson > 0 ? Math.min(100, Math.round((partnerTodaySetor / sharePerPerson) * 100)) : 0;
+
+      const rafkaTodayDone = rafkaTodaySetor >= sharePerPerson;
+      const partnerTodayDone = partnerTodaySetor >= sharePerPerson;
+      const isLitToday = isDayQualified(todayKey);
+
+      // Mulai cek dari hari ini jika sudah terpenuhi; jika belum, cek dari kemarin (reset 00:00).
+      // Begitu ada hari yang tidak terpenuhi, loop berhenti (streak mati / 0).
+      let streakDays = 0;
+      let cursorKey = isLitToday ? todayKey : prevDayKey(todayKey);
+
+      while (isDayQualified(cursorKey)) {
+        streakDays += 1;
+        cursorKey = prevDayKey(cursorKey);
+      }
+
+      let statusLabel = "0 • Reset tiap 00:00 • Menunggu keduanya setor";
+      if (isLitToday) {
+        statusLabel = `Menyala • Keduanya lunas hari ini (${formatRp(sharePerPerson)}/orang)`;
+      } else if (streakDays > 0) {
+        statusLabel = `Menunggu keduanya lunas hari ini (reset 00:00)`;
+      } else if (rafkaTodayDone && !partnerTodayDone) {
+        statusLabel = "Rafka sudah setor • Menunggu Partner (reset 00:00)";
+      } else if (!rafkaTodayDone && partnerTodayDone) {
+        statusLabel = "Partner sudah setor • Menunggu Rafka (reset 00:00)";
+      } else {
+        statusLabel = "Streak 0 • Terlewat/belum lunas • Reset tiap 00:00";
+      }
+
+      return {
+        streakDays,
+        isLitToday,
+        rafkaTodayDone,
+        partnerTodayDone,
+        rafkaTodayPct,
+        partnerTodayPct,
+        totalHariTerpenuhi,
+        statusLabel
+      };
     }
 
     function updateLockStateUI() {
@@ -1241,8 +1441,34 @@
         icon.textContent = "+";
         text.textContent = "Catat Setor atau Tarik Tabungan";
         paceEl.classList.remove("warn-text");
-        statusDesc.textContent = `Target harian: ${formatRp(currentTargetHarian)}/hari • Kekurangan otomatis ditambal hari berikutnya.`;
+        statusDesc.textContent = `Target harian: ${formatRp(currentTargetHarian)}/hari • Streak reset tiap jam 12 malam.`;
       }
+    }
+
+    function renderStreakUI(streakInfo) {
+      const card = document.getElementById("streakCard");
+      const countEl = document.getElementById("streakCountText");
+      const statusEl = document.getElementById("streakStatusText");
+      const chipRafka = document.getElementById("chipRafka");
+      const chipPartner = document.getElementById("chipPartner");
+
+      countEl.textContent = `${streakInfo.streakDays} hari berturut-turut`;
+      statusEl.textContent = streakInfo.statusLabel;
+
+      card.classList.toggle("lit", streakInfo.isLitToday);
+      card.classList.toggle("dim", !streakInfo.isLitToday);
+
+      const rName = userProfile.role === "Rafka" ? (userProfile.nama || "Rafka") : "Rafka";
+      const pName = userProfile.role === "Partner" ? (userProfile.nama || "Partner") : "Partner";
+
+      chipRafka.textContent = `${rName}: ${streakInfo.rafkaTodayPct}%`;
+      chipRafka.className = `ready-chip ${streakInfo.rafkaTodayDone ? "ok" : "wait"}`;
+
+      chipPartner.textContent = `${pName}: ${streakInfo.partnerTodayPct}%`;
+      chipPartner.className = `ready-chip ${streakInfo.partnerTodayDone ? "ok" : "wait"}`;
+
+      document.getElementById("chartStreakAktif").textContent = `${streakInfo.streakDays} hari`;
+      document.getElementById("chartHariTerpenuhi").textContent = `${streakInfo.totalHariTerpenuhi} hari`;
     }
 
     function renderGaugeAndStats(stats) {
@@ -1255,7 +1481,7 @@
         rafkaTarik,
         partnerSetor,
         partnerTarik,
-        dailySetorMap
+        dailyByPersonMap
       } = stats;
 
       const saldo = totalSetor - totalTarik;
@@ -1277,9 +1503,10 @@
       document.getElementById("sisaTargetText").textContent =
         `${formatRp(sisa)} tersisa dari ${formatRp(safeTarget)}`;
 
-      const paceEl = document.getElementById("paceText");
-      const hariTerpenuhi = hitungHariTerpenuhi(dailySetorMap || {}, currentTargetHarian);
+      const streakInfo = hitungStreakStrictHarian(dailyByPersonMap || { rafka: {}, partner: {} }, currentTargetHarian);
+      renderStreakUI(streakInfo);
 
+      const paceEl = document.getElementById("paceText");
       if (currentTargetHarian <= 0) {
         paceEl.classList.add("warn-text");
         paceEl.textContent = "Wajib isi target harian dulu";
@@ -1289,7 +1516,7 @@
       } else {
         paceEl.classList.remove("warn-text");
         const estimasiHari = Math.max(1, Math.ceil(sisa / currentTargetHarian));
-        paceEl.textContent = `Estimasi selesai ~${estimasiHari} hari lagi (${hariTerpenuhi} hari terpenuhi)`;
+        paceEl.textContent = `Estimasi selesai ~${estimasiHari} hari lagi`;
       }
 
       document.getElementById("targetSummaryDesc").textContent =
@@ -1317,7 +1544,6 @@
       document.getElementById("chartTotalTarik").textContent = `-${formatRp(totalTarik)}`;
       document.getElementById("chartTargetHarian").textContent =
         currentTargetHarian > 0 ? `${formatRp(currentTargetHarian)} / hari` : "Belum diatur";
-      document.getElementById("chartHariTerpenuhi").textContent = `${hariTerpenuhi} hari`;
       document.getElementById("chartSaldoBersih").textContent = saldoFormatted;
     }
 
@@ -1440,7 +1666,7 @@
       const cleanHarian = Number(harianVal);
 
       if (!cleanHarian || cleanHarian <= 0) {
-        alert("Target pemasukan harian wajib diisi (lebih dari Rp0) agar estimasi dan pencatatan tabungan bisa berjalan.");
+        alert("Target pemasukan harian wajib diisi (lebih dari Rp0) agar estimasi dan streak harian bisa berjalan.");
         return Promise.reject();
       }
 
@@ -1489,7 +1715,7 @@
       rafkaTarik: 0,
       partnerSetor: 0,
       partnerTarik: 0,
-      dailySetorMap: {}
+      dailyByPersonMap: { rafka: {}, partner: {} }
     };
 
     judulRef.on("value", (snapshot) => {
@@ -1521,7 +1747,7 @@
       let rafkaTarik = 0;
       let partnerSetor = 0;
       let partnerTarik = 0;
-      const dailySetorMap = {};
+      const dailyByPersonMap = { rafka: {}, partner: {} };
 
       if (!data) {
         listEl.innerHTML = '<div class="empty-state">Belum ada transaksi tercatat.</div>';
@@ -1533,7 +1759,7 @@
           rafkaTarik: 0,
           partnerSetor: 0,
           partnerTarik: 0,
-          dailySetorMap: {}
+          dailyByPersonMap: { rafka: {}, partner: {} }
         };
         renderGaugeAndStats(latestStats);
         return;
@@ -1548,12 +1774,13 @@
         const isTarik = item.tipe === "tarik" || rawJumlah < 0;
         const nominalAbs = Math.abs(Number(item.nominalAbs) || rawJumlah);
         const penyetor = item.nama || "Rafka";
+        const isPartner = penyetor.toLowerCase().includes("partner");
         const ts = item.timestamp ? Number(item.timestamp) : null;
         const labelWaktu = ts ? formatTanggalJamRealTime(ts) : (item.waktu || "");
 
         if (isTarik) {
           totalTarik += nominalAbs;
-          if (penyetor.toLowerCase().includes("partner")) {
+          if (isPartner) {
             partnerTarik += nominalAbs;
           } else {
             rafkaTarik += nominalAbs;
@@ -1561,11 +1788,12 @@
         } else {
           totalSetor += nominalAbs;
           const dKey = getDayKey(ts || Date.now());
-          dailySetorMap[dKey] = (dailySetorMap[dKey] || 0) + nominalAbs;
-          if (penyetor.toLowerCase().includes("partner")) {
+          if (isPartner) {
             partnerSetor += nominalAbs;
+            dailyByPersonMap.partner[dKey] = (dailyByPersonMap.partner[dKey] || 0) + nominalAbs;
           } else {
             rafkaSetor += nominalAbs;
+            dailyByPersonMap.rafka[dKey] = (dailyByPersonMap.rafka[dKey] || 0) + nominalAbs;
           }
         }
 
@@ -1599,11 +1827,21 @@
         rafkaTarik,
         partnerSetor,
         partnerTarik,
-        dailySetorMap
+        dailyByPersonMap
       };
 
       renderGaugeAndStats(latestStats);
     });
+
+    // Cek pergantian hari (reset jam 12 malam / 00:00) secara berkala meski halaman dibiarkan terbuka
+    setInterval(() => {
+      const nowDayKey = getDayKey(Date.now());
+      if (nowDayKey !== activeDayKey) {
+        activeDayKey = nowDayKey;
+        setMonthHeader();
+        renderGaugeAndStats(latestStats);
+      }
+    }, 30000);
 
     function escapeHtml(str) {
       return String(str)
