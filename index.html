@@ -166,7 +166,8 @@
 
     .gauge-pace {
       font-size: 11px;
-      color: var(--text-muted);
+      color: #c4b8ff;
+      font-weight: 600;
       margin-top: 3px;
       line-height: 1.25;
     }
@@ -690,7 +691,7 @@
             <div class="gauge-label" id="judulTarget">Target Tabungan Bersama</div>
             <div class="gauge-total" id="totalTerkumpul">Rp0</div>
             <div class="gauge-sub" id="sisaTargetText">Rp0 tersisa dari Rp5.000.000</div>
-            <div class="gauge-pace" id="paceText">~Rp0 / minggu sampai akhir bulan</div>
+            <div class="gauge-pace" id="paceText">Isi setoran atau target harian untuk estimasi</div>
           </div>
         </div>
       </div>
@@ -810,6 +811,9 @@
         <label for="inputTargetBaru">Nominal Target (Rp)</label>
         <input type="number" id="inputTargetBaru" placeholder="Contoh: 5000000" min="1000" step="1000" />
 
+        <label for="inputHarianBaru">Target / Pemasukan Harian (Rp / hari, opsional)</label>
+        <input type="number" id="inputHarianBaru" placeholder="Kosongkan untuk pakai rata-rata setoran" min="0" step="1000" />
+
         <button type="button" class="btn-primary" onclick="updateTarget()">Simpan Perubahan Target</button>
       </div>
 
@@ -897,6 +901,9 @@
       <label for="modalTargetInput">Nominal Target (Rp)</label>
       <input type="number" id="modalTargetInput" placeholder="5000000" min="1000" step="1000" />
 
+      <label for="modalHarianInput">Target / Pemasukan Harian (Rp / hari, opsional)</label>
+      <input type="number" id="modalHarianInput" placeholder="Kosongkan untuk pakai rata-rata setoran" min="0" step="1000" />
+
       <button type="button" class="btn-primary" onclick="updateTargetFromModal()">Simpan Target</button>
     </div>
   </div>
@@ -921,16 +928,34 @@
     const transaksiRef = db.ref('tabungan_bersama/transaksi');
     const targetRef = db.ref('tabungan_bersama/target');
     const judulRef = db.ref('tabungan_bersama/judul');
+    const harianRef = db.ref('tabungan_bersama/target_harian');
 
     const ARC_LENGTH = 289.03;
     let currentJudul = "Target Tabungan Bersama";
     let currentTarget = 5000000;
+    let currentTargetHarian = 0;
     let currentSaldo = 0;
     let selectedTxType = "setor";
 
     function formatRp(num) {
       const n = Number(num) || 0;
       return "Rp" + Math.abs(n).toLocaleString("id-ID");
+    }
+
+    function formatTanggalJamRealTime(ts) {
+      const date = ts ? new Date(Number(ts)) : new Date();
+      if (Number.isNaN(date.getTime())) return "";
+      const tanggal = date.toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      });
+      const jam = date.toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      }).replace(".", ":");
+      return `${tanggal} • ${jam} WIB`;
     }
 
     function setMonthHeader() {
@@ -940,14 +965,17 @@
         label.charAt(0).toUpperCase() + label.slice(1);
     }
 
-    function getRemainingWeeksInMonth() {
-      const now = new Date();
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      const diffDays = Math.max(1, Math.ceil((endOfMonth - now) / (1000 * 60 * 60 * 24)));
-      return Math.max(1, diffDays / 7);
-    }
+    function renderGaugeAndStats(stats) {
+      const {
+        totalSetor,
+        totalTarik,
+        rafkaSetor,
+        rafkaTarik,
+        partnerSetor,
+        partnerTarik,
+        oldestSetorTs
+      } = stats;
 
-    function renderGaugeAndStats(totalSetor, totalTarik, rafkaSetor, rafkaTarik, partnerSetor, partnerTarik) {
       const saldo = totalSetor - totalTarik;
       currentSaldo = saldo;
 
@@ -967,11 +995,24 @@
       document.getElementById("sisaTargetText").textContent =
         `${formatRp(sisa)} tersisa dari ${formatRp(safeTarget)}`;
 
-      const weeklyNeed = sisa / getRemainingWeeksInMonth();
-      document.getElementById("paceText").textContent =
-        sisa === 0
-          ? "Target sudah tercapai 🎉"
-          : `~${formatRp(Math.ceil(weeklyNeed))} / minggu sampai akhir bulan`;
+      let avgSetorPerHari = 0;
+      if (totalSetor > 0) {
+        const startTs = oldestSetorTs || Date.now();
+        const spanDays = Math.max(1, Math.ceil((Date.now() - startTs) / (1000 * 60 * 60 * 24)));
+        avgSetorPerHari = Math.max(1, Math.round(totalSetor / spanDays));
+      }
+
+      const acuanHarian = currentTargetHarian > 0 ? currentTargetHarian : avgSetorPerHari;
+
+      if (sisa === 0) {
+        document.getElementById("paceText").textContent = "Target sudah tercapai 🎉";
+      } else if (acuanHarian > 0) {
+        const estimasiHari = Math.max(1, Math.ceil(sisa / acuanHarian));
+        document.getElementById("paceText").textContent =
+          `Estimasi selesai ~${estimasiHari} hari lagi`;
+      } else {
+        document.getElementById("paceText").textContent = "Isi setoran atau target harian untuk estimasi";
+      }
 
       document.getElementById("targetSummaryDesc").textContent =
         `${currentJudul} • Target ${formatRp(safeTarget)}`;
@@ -1023,6 +1064,7 @@
     function openTargetModal() {
       document.getElementById("modalJudulInput").value = currentJudul;
       document.getElementById("modalTargetInput").value = currentTarget;
+      document.getElementById("modalHarianInput").value = currentTargetHarian > 0 ? currentTargetHarian : "";
       document.getElementById("targetModal").classList.add("show");
     }
 
@@ -1060,18 +1102,15 @@
         return;
       }
 
+      const nowTs = Date.now();
       const payload = {
         nama,
         tipe: selectedTxType,
         jumlah: selectedTxType === "tarik" ? -jumlahAbs : jumlahAbs,
         nominalAbs: jumlahAbs,
         catatan: catatan || (selectedTxType === "setor" ? "Setoran tabungan" : "Penarikan tabungan"),
-        waktu: new Date().toLocaleString("id-ID", {
-          day: "2-digit",
-          month: "short",
-          hour: "2-digit",
-          minute: "2-digit"
-        })
+        timestamp: nowTs,
+        waktu: formatTanggalJamRealTime(nowTs)
       };
 
       transaksiRef.push(payload)
@@ -1090,13 +1129,17 @@
         .catch((err) => alert("Gagal menghapus transaksi: " + err.message));
     }
 
-    function applyTargetUpdate(judulVal, targetVal) {
+    function applyTargetUpdate(judulVal, targetVal, harianVal) {
       const cleanJudul = String(judulVal || "").trim();
       const cleanTarget = Number(targetVal);
+      const cleanHarian = harianVal === "" || harianVal === undefined ? 0 : Number(harianVal);
       const tasks = [];
 
       if (cleanJudul) tasks.push(judulRef.set(cleanJudul));
       if (cleanTarget && cleanTarget > 0) tasks.push(targetRef.set(Math.round(cleanTarget)));
+      if (!Number.isNaN(cleanHarian) && cleanHarian >= 0) {
+        tasks.push(harianRef.set(Math.round(cleanHarian)));
+      }
 
       if (tasks.length === 0) {
         alert("Isi judul atau nominal target terlebih dahulu.");
@@ -1111,16 +1154,19 @@
     function updateTarget() {
       const j = document.getElementById("inputJudulBaru").value;
       const t = document.getElementById("inputTargetBaru").value;
-      applyTargetUpdate(j, t).then(() => {
+      const h = document.getElementById("inputHarianBaru").value;
+      applyTargetUpdate(j, t, h).then(() => {
         document.getElementById("inputJudulBaru").value = "";
         document.getElementById("inputTargetBaru").value = "";
+        document.getElementById("inputHarianBaru").value = "";
       });
     }
 
     function updateTargetFromModal() {
       const j = document.getElementById("modalJudulInput").value;
       const t = document.getElementById("modalTargetInput").value;
-      applyTargetUpdate(j, t).then(() => closeModal("targetModal"));
+      const h = document.getElementById("modalHarianInput").value;
+      applyTargetUpdate(j, t, h).then(() => closeModal("targetModal"));
     }
 
     function copyShareLink() {
@@ -1134,19 +1180,32 @@
       }
     }
 
+    let latestStats = {
+      totalSetor: 0,
+      totalTarik: 0,
+      rafkaSetor: 0,
+      rafkaTarik: 0,
+      partnerSetor: 0,
+      partnerTarik: 0,
+      oldestSetorTs: null
+    };
+
     judulRef.on("value", (snapshot) => {
       const val = snapshot.val();
       currentJudul = val && String(val).trim() ? String(val).trim() : "Target Tabungan Bersama";
-      document.getElementById("judulTarget").textContent = currentJudul;
-      document.getElementById("targetSummaryDesc").textContent =
-        `${currentJudul} • Target ${formatRp(currentTarget)}`;
+      renderGaugeAndStats(latestStats);
     });
 
     targetRef.on("value", (snapshot) => {
       const val = snapshot.val();
       currentTarget = val && Number(val) > 0 ? Number(val) : 5000000;
-      document.getElementById("targetSummaryDesc").textContent =
-        `${currentJudul} • Target ${formatRp(currentTarget)}`;
+      renderGaugeAndStats(latestStats);
+    });
+
+    harianRef.on("value", (snapshot) => {
+      const val = snapshot.val();
+      currentTargetHarian = val && Number(val) > 0 ? Number(val) : 0;
+      renderGaugeAndStats(latestStats);
     });
 
     transaksiRef.on("value", (snapshot) => {
@@ -1160,11 +1219,21 @@
       let rafkaTarik = 0;
       let partnerSetor = 0;
       let partnerTarik = 0;
+      let oldestSetorTs = null;
 
       if (!data) {
         listEl.innerHTML = '<div class="empty-state">Belum ada transaksi tercatat.</div>';
         countEl.textContent = "0 transaksi";
-        renderGaugeAndStats(0, 0, 0, 0, 0, 0);
+        latestStats = {
+          totalSetor: 0,
+          totalTarik: 0,
+          rafkaSetor: 0,
+          rafkaTarik: 0,
+          partnerSetor: 0,
+          partnerTarik: 0,
+          oldestSetorTs: null
+        };
+        renderGaugeAndStats(latestStats);
         return;
       }
 
@@ -1177,6 +1246,8 @@
         const isTarik = item.tipe === "tarik" || rawJumlah < 0;
         const nominalAbs = Math.abs(Number(item.nominalAbs) || rawJumlah);
         const penyetor = item.nama || "Rafka";
+        const ts = item.timestamp ? Number(item.timestamp) : null;
+        const labelWaktu = ts ? formatTanggalJamRealTime(ts) : (item.waktu || "");
 
         if (isTarik) {
           totalTarik += nominalAbs;
@@ -1187,6 +1258,9 @@
           }
         } else {
           totalSetor += nominalAbs;
+          if (ts && (!oldestSetorTs || ts < oldestSetorTs)) {
+            oldestSetorTs = ts;
+          }
           if (penyetor.toLowerCase().includes("partner")) {
             partnerSetor += nominalAbs;
           } else {
@@ -1205,7 +1279,7 @@
               </span>
             </div>
             <div class="history-note">${escapeHtml(item.catatan || "-")}</div>
-            <div class="history-time">${escapeHtml(item.waktu || "")}</div>
+            <div class="history-time">${escapeHtml(labelWaktu)}</div>
           </div>
           <div class="history-right">
             <div class="history-amount ${isTarik ? "val-tarik" : "val-setor"}">
@@ -1217,7 +1291,17 @@
         listEl.appendChild(row);
       });
 
-      renderGaugeAndStats(totalSetor, totalTarik, rafkaSetor, rafkaTarik, partnerSetor, partnerTarik);
+      latestStats = {
+        totalSetor,
+        totalTarik,
+        rafkaSetor,
+        rafkaTarik,
+        partnerSetor,
+        partnerTarik,
+        oldestSetorTs
+      };
+
+      renderGaugeAndStats(latestStats);
     });
 
     function escapeHtml(str) {
