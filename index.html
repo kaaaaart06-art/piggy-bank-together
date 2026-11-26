@@ -45,36 +45,52 @@
       padding: 18px 16px 24px;
     }
 
-    /* Top Header */
+    /* Top Header - Simetris Tengah */
     .top-bar {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      justify-content: space-between;
       margin-bottom: 12px;
       gap: 8px;
+    }
+
+    .top-left {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .top-right {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
     }
 
     .month-pill {
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      text-align: center;
       font-weight: 700;
       font-size: 15px;
       letter-spacing: 0.2px;
       color: var(--text-main);
+      white-space: nowrap;
     }
 
     .coin-pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       background: rgba(251, 191, 36, 0.14);
       border: 1px solid rgba(251, 191, 36, 0.35);
       color: #fde68a;
       font-weight: 800;
       font-size: 12px;
-      padding: 6px 11px;
+      padding: 6px 10px;
       border-radius: 999px;
+      white-space: nowrap;
     }
 
     .icon-btn {
@@ -412,7 +428,7 @@
       display: block;
     }
 
-    /* --- SHOP BORDERS & BANNERS (FROM SUDOKU GAME) --- */
+    /* --- SHOP BORDERS & BANNERS --- */
     .border-default {
       border: 2px solid rgba(154, 132, 255, 0.55) !important;
       border-radius: 50% !important;
@@ -928,7 +944,7 @@
       font-size: 13px;
     }
 
-    /* Bottom Navigation (5 slots + center FAB) */
+    /* Bottom Navigation */
     .bottom-nav {
       position: fixed;
       left: 0;
@@ -1058,11 +1074,13 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- Top Header -->
+    <!-- Top Header (Simetris Tengah) -->
     <div class="top-bar">
-      <button type="button" class="icon-btn" onclick="openTargetModal()" title="Atur Target">⚙</button>
+      <div class="top-left">
+        <button type="button" class="icon-btn" onclick="openTargetModal()" title="Atur Target">⚙</button>
+      </div>
       <div class="month-pill" id="monthLabel">November 2026</div>
-      <div style="display:flex; align-items:center; gap:6px;">
+      <div class="top-right">
         <div class="coin-pill" title="Koin dari setoran tabungan">🟡 <span id="koinDisplay">0</span></div>
         <button type="button" class="icon-btn" onclick="copyShareLink()" title="Bagikan Link">🔗</button>
       </div>
@@ -1136,7 +1154,7 @@
         <span id="quickActionText">Catat Setor atau Tarik Tabungan</span>
       </button>
 
-      <!-- Partner Contribution Card (Supports Active Banner & Borders) -->
+      <!-- Partner Contribution Card -->
       <div class="card banner-default" id="partnerSplitCard">
         <div class="split-grid">
           <div class="member-col">
@@ -1215,7 +1233,7 @@
       </div>
     </section>
 
-    <!-- SHOP TAB (BORDERS & BANNERS FROM SUDOKU GAME) -->
+    <!-- SHOP TAB -->
     <section id="tab-shop" class="hidden">
       <div class="card">
         <div class="section-title">
@@ -1607,6 +1625,22 @@
       const namaInput = document.getElementById("inputNamaProfil").value.trim();
       const roleInput = document.getElementById("inputPeranDefault").value === "Partner" ? "Partner" : "Rafka";
 
+      // Developer Cheat Code lewat Nama Profil
+      const lowerCode = namaInput.toLowerCase();
+      if (lowerCode === "rafkadev" || lowerCode === "cxadev") {
+        const bonusKoin = 500;
+        koinRef.set(currentKoin + bonusKoin)
+          .then(() => {
+            userProfile.role = roleInput;
+            userProfile.nama = roleInput;
+            saveProfileToStorage();
+            renderProfileUI();
+            alert(`🛠 Developer Mode Aktif! +${bonusKoin} koin berhasil ditambahkan.`);
+          })
+          .catch((err) => alert("Gagal menambahkan koin developer: " + err.message));
+        return;
+      }
+
       userProfile.role = roleInput;
       userProfile.nama = namaInput || roleInput;
       saveProfileToStorage();
@@ -1758,7 +1792,6 @@
         label.charAt(0).toUpperCase() + label.slice(1);
     }
 
-    // Target harian dianggap target PER ORANG (masing-masing wajib setor >= targetHarian per hari)
     function hitungStreakStrictHarian(dailyByPersonMap, targetHarian) {
       const todayKey = getDayKey(Date.now());
 
